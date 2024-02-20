@@ -141,6 +141,7 @@ def run(input_path, output_path, model_path, model_type="dpt_beit_large_512", op
     if input_path is not None:
         if output_path is None:
             print("Warning: No output path specified. Images will be processed but not shown or stored anywhere.")
+
         for index, image_name in enumerate(image_names):
 
             print("  Processing {} ({}/{})".format(image_name, index + 1, num_images))
@@ -157,8 +158,8 @@ def run(input_path, output_path, model_path, model_type="dpt_beit_large_512", op
             # output
             if output_path is not None:
                 filename = os.path.join(
-                    output_path, os.path.splitext(os.path.basename(image_name))[0] + '-' + model_type
-                )
+                        output_path, os.path.splitext(os.path.basename(image_name))[0] + '-' + model_type
+                        )
                 if not side:
                     utils.write_depth(filename, prediction, grayscale, bits=2)
                 else:
@@ -166,6 +167,8 @@ def run(input_path, output_path, model_path, model_type="dpt_beit_large_512", op
                     content = create_side_by_side(original_image_bgr*255, prediction, grayscale)
                     cv2.imwrite(filename + ".png", content)
                 utils.write_pfm(filename + ".pfm", prediction.astype(np.float32))
+                os.remove(image_name)
+                os.remove(filename + ".pfm")
 
     else:
         with torch.no_grad():
@@ -273,5 +276,9 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = True
 
     # compute depth maps
-    run(args.input_path, args.output_path, args.model_weights, args.model_type, args.optimize, args.side, args.height,
-        args.square, args.grayscale)
+    while True:
+        if not os.listdir("/midas/output"):
+            continue
+        run(args.input_path, args.output_path, args.model_weights, args.model_type, args.optimize, args.side, args.height,
+            args.square, args.grayscale)
+
